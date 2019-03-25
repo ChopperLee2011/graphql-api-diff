@@ -1,0 +1,15 @@
+{
+  "name": "graphql-api-diff",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@graphql-inspector/core": "^0.13.3",
+    "dateformat": "^3.0.3",
+    "get-graphql-schema": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^11.11.5",
+    "typescript": "^3.3.4000"
+  }
+}
