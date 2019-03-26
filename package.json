@@ -1,10 +1,25 @@
 {
   "name": "graphql-api-diff",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Tool for checking remote GraphQL changes.",
+  "main": "dist/index.js",
+  "author": {
+    "name": "Chopper Lee",
+    "email": "lihengpro@gmail.com",
+    "url": "https://github.com/chopperlee2011"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "ChopperLee2011/graphql-api-diff"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist/"
+  },
   "dependencies": {
     "@graphql-inspector/core": "^0.13.3",
+    "@graphql-inspector/load": "^1.14.0",
     "dateformat": "^3.0.3",
     "get-graphql-schema": "^2.1.2"
   },

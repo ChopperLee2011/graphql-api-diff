@@ -25,7 +25,7 @@ function _forkPromise(a, b): Promise<any> {
             return resolve(result);
         });
         child.stderr!.on('error', (e) => {
-            return reject(e)
+            return reject(e);
         });
     })
 }
@@ -36,23 +36,35 @@ async function _get2SchemaFile(name): Promise<(String | null) []> {
     if (files == null) {
         return [];
     }
-    if (files.length > 2) {
-        throw new Error('can not find at least 2 files match name:' + name);
-    } else {
-        return files;
-    }
+    return files;
 }
 
 async function genNewSchemaFile() : Promise<void>{
-    const schema = await _forkPromise(
-        path.join(__dirname, '../node_modules/.bin/get-graphql-schema'),
-        [task.url]
-    );
-    await fs.writeFileSync(`${schemasPath}/${task.name}-${suffixFileName}.graphql`, schema);
+    try {
+        const schema = await _forkPromise(
+            path.join(__dirname, '../node_modules/.bin/get-graphql-schema'),
+            [task.url]
+        );
+        if (!schema) {
+            throw new Error('child process exit with empty schema');
+        }
+        if (!fs.existsSync(schemasPath)) {
+            fs.mkdirSync(schemasPath);
+        }
+        await fs.writeFileSync(`${schemasPath}/${task.name}-${suffixFileName}.graphql`, schema);
+    } catch (err) {
+        throw new Error('can not create schema files, ' + err.message);
+    }
 }
 
 async function reportSchemasDiff(): Promise<Change []>{
     const files = await _get2SchemaFile(task.name);
+    if (files.length === 0) {
+        throw new Error(`can not find at least 2 files match name: ${task.name}`);
+    }
+    if (files.length === 1) {
+        return [];
+    }
     const newSchema = await loadSchema(`${schemasPath}/${files[0]}`);
     const oldSchema = await loadSchema(`${schemasPath}/${files[1]}`);
     const changes: Change [] = diff(oldSchema, newSchema);
@@ -61,15 +73,28 @@ async function reportSchemasDiff(): Promise<Change []>{
 
 async function main() {
     try {
+        console.log('generate new schema file...');
         await genNewSchemaFile();
-        console.log('generate new schema file done.');
     } catch (err) {
-        console.log('genNewSchemaFile err: ' + err);
+        console.log('genNewSchemaFile fail ' + err);
+        throw err;
     }
-    const result = await reportSchemasDiff();
-    console.log('reporting...');
-    console.log(result);
-    console.log('done');
+    try {
+        console.log('check remote schema changes...');
+        const result = await reportSchemasDiff();
+        if (result.length === 0) {
+            console.log('no changes');
+        } else {
+            console.log(result);
+        }
+        console.log('done');
+    } catch (err) {
+        console.log(`reportSchemasDiff fail ${err}`);
+        throw err;
+    }
 }
 
-main();
+main()
+    .catch(err => {
+        return;
+    });
